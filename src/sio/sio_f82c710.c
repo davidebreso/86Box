@@ -255,12 +255,10 @@ f82c710_config_write(uint16_t port, uint8_t val, void *priv)
 
     switch (port) {
         case 0x2fa:
-            if ((dev->configuration_state == 0) && (val != 0x00) && (val != 0xff) && (dev->local == 606)) {
+            if ((dev->configuration_state == 0) && (val != 0x00) && (val != 0xff)) {
                 configuration_state_event = 1;
                 dev->last_write           = val;
-            } else if ((dev->configuration_state == 0) && (val == 0x55) && (dev->local >= 710))
-                configuration_state_event = 1;
-            else if (dev->configuration_state == 4) {
+            } else if (dev->configuration_state == 4) {
                 if ((val | dev->last_write) == 0xff) {
                     dev->cri_addr           = ((uint16_t) dev->last_write) << 2;
                     dev->cap_addr           = dev->cri_addr + 1;
@@ -276,9 +274,7 @@ f82c710_config_write(uint16_t port, uint8_t val, void *priv)
             }
             break;
         case 0x3fa:
-            if ((dev->configuration_state == 1) && ((val | dev->last_write) == 0xff) && (dev->local == 606))
-                configuration_state_event = 1;
-            else if ((dev->configuration_state == 1) && (val == 0xaa) && (dev->local >= 710))
+            if ((dev->configuration_state == 1) && ((val | dev->last_write) == 0xff))
                 configuration_state_event = 1;
             else if ((dev->configuration_state == 2) && (val == 0x36))
                 configuration_state_event = 1;
