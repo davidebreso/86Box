@@ -84,6 +84,7 @@ extern const device_t ide_qua_pnp_device;
 
 extern const device_t xta_wdxt150_device; /* xta_wdxt150 */
 extern const device_t xta_hd20_device;    /* EuroPC internal */
+extern const device_t xta_pc5086_device;  /* Amstrad PC5086 internal */
 
 extern const device_t xtide_device;           /* xtide_xt */
 extern const device_t xtide_plus_device;      /* xtide_xt_plus */

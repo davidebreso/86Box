@@ -106,6 +106,7 @@
 
 #define WD_REV_1_BIOS_FILE "roms/hdd/xta/idexywd2.bin"
 #define WD_REV_2_BIOS_FILE "roms/hdd/xta/infowdbios.rom"
+#define PC5086_BIOS_FILE   "roms/machines/pc5086/c800.bin"
 
 enum {
     STATE_IDLE = 0,
@@ -926,7 +927,11 @@ hdc_read(uint16_t port, void *priv)
             break;
 
         case 2:         /* "read option jumpers" */
-            ret = 0xff; /* all switches off */
+            if (dev->type == 2) {
+                ret = 0x00;  /* needed to set 40MB HD type in the Amstrad PC5086 */
+            } else {
+                ret = 0xff; /* all switches off */
+            }
             break;
 
         default:
@@ -1033,6 +1038,16 @@ xta_init(const device_t *info)
             dev->base = 0x0320;
             dev->irq  = 5;
             dev->dma  = 3;
+            break;
+            
+        case 2: /* Amstrad PC5086 */
+            dev->name     = "PC5086-HD";
+            dev->base     = 0x0320;
+            dev->irq      = 5;
+            dev->dma      = 3;
+            dev->rom_addr = 0xC8000;
+            fn            = PC5086_BIOS_FILE;
+            max           = 1;
             break;
 
         default:
@@ -1199,6 +1214,20 @@ const device_t xta_hd20_device = {
     .internal_name = "xta_hd20",
     .flags = DEVICE_ISA,
     .local = 1,
+    .init = xta_init,
+    .close = xta_close,
+    .reset = NULL,
+    { .available = NULL },
+    .speed_changed = NULL,
+    .force_redraw = NULL,
+    .config = NULL
+};
+
+const device_t xta_pc5086_device = {
+    .name = "Amstrad PC5086 Fixed Disk Controller",
+    .internal_name = "xta_pc5086",
+    .flags = DEVICE_ISA,
+    .local = 2,
     .init = xta_init,
     .close = xta_close,
     .reset = NULL,

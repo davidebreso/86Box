@@ -113,7 +113,9 @@ f82c710_update_ports(upc_t *dev, int set)
             lpt1_irq(LPT2_IRQ);
     }
 
-    if (dev->regs[12] & 0x80)
+    /* Enable primary IDE controller if:
+     * IDE is enabled (bit 7 == 1) in AT mode (bit 6 == 0) */
+    if ((dev->regs[12] & 0x80) && !(dev->regs[12] & 0x40))
         ide_pri_enable();
 
     if (dev->regs[12] & 0x20)

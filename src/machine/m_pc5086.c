@@ -73,8 +73,13 @@ machine_pc5086_init(const machine_t *model)
 
     device_add(&keyboard_xt_device);
 
-/*    if (fdc_type == FDC_INTERNAL)
-        device_add(&fdc_at_device); */
+    /*
+     * Set up and enable the XTA disk controller.
+     *
+     * We only do this if we have not configured another one.
+     */
+    if (hdc_current == 1)
+        device_add(&xta_pc5086_device);
 
     return ret;
 }
