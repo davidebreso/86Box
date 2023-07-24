@@ -258,7 +258,7 @@ f82c710_config_write(uint16_t port, uint8_t val, void *priv)
             if ((dev->configuration_state == 0) && (val != 0x00) && (val != 0xff) && (dev->local == 606)) {
                 configuration_state_event = 1;
                 dev->last_write           = val;
-            } else if ((dev->configuration_state == 0) && (val == 0x55) && (dev->local == 710))
+            } else if ((dev->configuration_state == 0) && (val == 0x55) && (dev->local >= 710))
                 configuration_state_event = 1;
             else if (dev->configuration_state == 4) {
                 if ((val | dev->last_write) == 0xff) {
@@ -267,7 +267,7 @@ f82c710_config_write(uint16_t port, uint8_t val, void *priv)
                     dev->configuration_mode = 1;
                     if (dev->local == 606)
                         f82c606_update_ports(dev, 0);
-                    else if (dev->local == 710)
+                    else if (dev->local >= 710)
                         f82c710_update_ports(dev, 0);
                     /* TODO: is the value of cri reset here or when exiting configuration mode? */
                     io_sethandler(dev->cri_addr, 0x0002, f82c710_config_read, NULL, NULL, f82c710_config_write, NULL, NULL, dev);
@@ -278,7 +278,7 @@ f82c710_config_write(uint16_t port, uint8_t val, void *priv)
         case 0x3fa:
             if ((dev->configuration_state == 1) && ((val | dev->last_write) == 0xff) && (dev->local == 606))
                 configuration_state_event = 1;
-            else if ((dev->configuration_state == 1) && (val == 0xaa) && (dev->local == 710))
+            else if ((dev->configuration_state == 1) && (val == 0xaa) && (dev->local >= 710))
                 configuration_state_event = 1;
             else if ((dev->configuration_state == 2) && (val == 0x36))
                 configuration_state_event = 1;
@@ -301,7 +301,7 @@ f82c710_config_write(uint16_t port, uint8_t val, void *priv)
                 /* TODO: any benefit in updating at each register write instead of when exiting config mode? */
                 if (dev->local == 606)
                     f82c606_update_ports(dev, 1);
-                else if (dev->local == 710)
+                else if (dev->local >= 710)
                     f82c710_update_ports(dev, 1);
             } else
                 dev->regs[dev->cri] = val;
@@ -331,7 +331,7 @@ f82c710_reset(void *priv)
         dev->regs[6] = 0x9e; /* Parallel Base */
         dev->regs[7] = 0x80; /* Game Base */
         dev->regs[8] = 0xec; /* Interrupt Select */
-    } else if (dev->local == 710) {
+    } else if (dev->local >= 710) {
         dev->regs[0]  = 0x0c;
         dev->regs[1]  = 0x00;
         dev->regs[2]  = 0x00;
@@ -351,7 +351,7 @@ f82c710_reset(void *priv)
 
     if (dev->local == 606)
         f82c606_update_ports(dev, 1);
-    else if (dev->local == 710)
+    else if (dev->local >= 710)
         f82c710_update_ports(dev, 1);
 }
 
@@ -373,8 +373,11 @@ f82c710_init(const device_t *info)
     if (dev->local == 606) {
         dev->nvr      = device_add(&at_nvr_old_device);
         dev->gameport = gameport_add(&gameport_sio_device);
-    } else if (dev->local == 710)
+    } else if (dev->local == 710) {
         dev->fdc = device_add(&fdc_at_device);
+    } else if (dev->local == 1710) {
+        dev->fdc = device_add(&fdc_at_actlow_device);    
+    }
 
     dev->uart[0] = device_add_inst(&ns16450_device, 1);
     dev->uart[1] = device_add_inst(&ns16450_device, 2);
@@ -414,3 +417,18 @@ const device_t f82c710_device = {
     .force_redraw  = NULL,
     .config        = NULL
 };
+
+const device_t pc5086_sio_device = {
+    .name          = "Amstrad PC5086 F82C710 UPC Super I/O",
+    .internal_name = "pc5086sio",
+    .flags         = 0,
+    .local         = 1710,
+    .init          = f82c710_init,
+    .close         = f82c710_close,
+    .reset         = f82c710_reset,
+    { .available = NULL },
+    .speed_changed = NULL,
+    .force_redraw  = NULL,
+    .config        = NULL
+};
+

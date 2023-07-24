@@ -2374,6 +2374,44 @@ const machine_t machines[] = {
         .snd_device = NULL,
         .net_device = NULL
     },
+    {
+        .name = "[8086] Amstrad PC5086",
+        .internal_name = "pc5086",
+        .type = MACHINE_TYPE_8086,
+        .chipset = MACHINE_CHIPSET_PROPRIETARY,
+        .init = machine_pc5086_init,
+        .pad = 0,
+        .pad0 = 0,
+        .pad1 = MACHINE_AVAILABLE,
+        .pad2 = 0,
+        .cpu = {
+            .package = CPU_PKG_8086,
+            .block = CPU_BLOCK_NONE,
+            .min_bus = 0,
+            .max_bus = 0,
+            .min_voltage = 0,
+            .max_voltage = 0,
+            .min_multi = 0,
+            .max_multi = 0
+        },
+        .bus_flags = MACHINE_PC,
+        .flags = MACHINE_FLAGS_NONE,
+        .ram = {
+            .min = 640,
+            .max = 640,
+            .step = 640
+        },
+        .nvrmask = 127,
+        .kbc_device = &keyboard_xt_device,
+        .kbc_p1 = 0xff00,
+        .gpio = 0xffffffff,
+        .device = NULL,
+        .fdc_device = NULL,
+        .sio_device = NULL,
+        .vid_device = NULL,
+        .snd_device = NULL,
+        .net_device = NULL
+    },
 
 #if defined(DEV_BRANCH) && defined(USE_LASERXT)
     {
