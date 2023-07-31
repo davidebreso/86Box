@@ -82,5 +82,13 @@ machine_pc5086_init(const machine_t *model)
     if (hdc_current == 1)
         device_add(&xta_pc5086_device);
 
+    /*
+     * Set up and enable the internal C&T 82C451 video chip.
+     *
+     * We only do this if we have not configured another one.
+     */
+    if (gfxcard[0] == VID_INTERNAL)
+        device_add(&ct451_pc5086_device);
+
     return ret;
 }

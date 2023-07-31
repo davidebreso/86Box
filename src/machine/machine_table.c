@@ -2015,7 +2015,7 @@ const machine_t machines[] = {
             .max_multi = 0
         },
         .bus_flags = MACHINE_PC,
-        .flags = MACHINE_XTA | MACHINE_MOUSE,
+        .flags = MACHINE_VIDEO | MACHINE_XTA | MACHINE_MOUSE,
         .ram = {
             .min = 640,
             .max = 640,

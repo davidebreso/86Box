@@ -96,6 +96,7 @@ video_cards[] = {
 #endif
     { &cga_device                                    },
     { &sega_device                                   },
+    { &ct451_device                                  },
     { &gd5401_isa_device                             },
     { &gd5402_isa_device                             },
     { &gd5420_isa_device                             },
