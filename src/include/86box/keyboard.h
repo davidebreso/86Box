@@ -278,7 +278,7 @@ extern uint8_t      kbc_at_dev_queue_pos(atkbc_dev_t *dev, uint8_t main);
 extern void         kbc_at_dev_queue_add(atkbc_dev_t *dev, uint8_t val, uint8_t main);
 extern void         kbc_at_dev_reset(atkbc_dev_t *dev, int do_fa);
 extern atkbc_dev_t *kbc_at_dev_init(uint8_t inst);
-
+extern void         kbc_at_dev_poll(void *priv);
 #ifdef __cplusplus
 }
 #endif

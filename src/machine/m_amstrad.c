@@ -74,6 +74,7 @@
 #include <86box/vid_mda.h>
 #include <86box/machine.h>
 #include <86box/m_amstrad.h>
+#include <86box/plat_unused.h>
 
 #define STAT_PARITY   0x80
 #define STAT_RTIMEOUT 0x40
@@ -1997,7 +1998,7 @@ ms_read(uint16_t addr, void *priv)
 }
 
 static int
-ms_poll(int x, int y, int z, int b, void *priv)
+ms_poll(int x, int y, int z, int b, UNUSED(double abs_x), UNUSED(double abs_y), void *priv)
 {
     amstrad_t *ams = (amstrad_t *) priv;
 

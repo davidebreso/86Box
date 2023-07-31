@@ -100,7 +100,7 @@ static mouse_t mouse_devices[] = {
 static const device_t *mouse_curr;
 static void           *mouse_priv;
 static int             mouse_nbut;
-static int (*mouse_dev_poll)(int x, int y, int z, int b, void *priv);
+static int (*mouse_dev_poll)(int x, int y, int z, int b, double abs_x, double abs_y, void *priv);
 static void (*mouse_poll_ex)(void) = NULL;
 
 static double          sample_rate = 200.0;
@@ -199,7 +199,7 @@ mouse_reset(void)
 
     mouse_curr = mouse_devices[mouse_type].device;
 
-    if (mouse_curr != NULL)
+    if (mouse_priv == NULL)
         mouse_priv = device_add(mouse_curr);
 }
 
@@ -231,7 +231,7 @@ mouse_process(void)
         if (mouse_curr->poll != NULL)
             mouse_curr->poll(mouse_x, mouse_y, mouse_z, mouse_buttons, mouse_x_abs, mouse_y_abs, mouse_priv);
         else
-            mouse_dev_poll(mouse_x, mouse_y, mouse_z, mouse_buttons, mouse_priv);
+            mouse_dev_poll(mouse_x, mouse_y, mouse_z, mouse_buttons, mouse_x_abs, mouse_y_abs, mouse_priv);
 
         /* Reset mouse deltas. */
         mouse_x = mouse_y = mouse_z = 0;
@@ -239,7 +239,7 @@ mouse_process(void)
 }
 
 void
-mouse_set_poll(int (*func)(int, int, int, int, void *), void *arg)
+mouse_set_poll(int (*func)(int, int, int, int, double, double, void *), void *arg)
 {
     if (mouse_type != MOUSE_TYPE_INTERNAL)
         return;

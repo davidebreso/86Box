@@ -100,7 +100,7 @@ kbc_at_dev_queue_add(atkbc_dev_t *dev, uint8_t val, uint8_t main)
         dev->last_scan_code = val;
 }
 
-static void
+void
 kbc_at_dev_poll(void *priv)
 {
     atkbc_dev_t *dev = (atkbc_dev_t *) priv;

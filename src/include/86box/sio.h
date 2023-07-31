@@ -17,6 +17,7 @@
 #define EMU_SIO_H
 
 extern void vt82c686_sio_write(uint8_t addr, uint8_t val, void *priv);
+extern void *f82c710_ps2_dev_init();
 
 extern const device_t acc3221_device;
 extern const device_t ali5123_device;

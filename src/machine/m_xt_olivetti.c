@@ -57,6 +57,7 @@
 #include <86box/vid_ogc.h>
 #include <86box/vid_colorplus.h>
 #include <86box/vid_cga_comp.h>
+#include <86box/plat_unused.h>
 
 #define STAT_PARITY       0x80
 #define STAT_RTIMEOUT     0x40
@@ -725,7 +726,7 @@ m24_kbd_reset(void *priv)
 }
 
 static int
-ms_poll(int x, int y, int z, int b, void *priv)
+ms_poll(int x, int y, int z, int b, UNUSED(double abs_x), UNUSED(double abs_y), void *priv)
 {
     m24_kbd_t *m24_kbd = (m24_kbd_t *) priv;
 

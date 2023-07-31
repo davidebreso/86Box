@@ -598,6 +598,7 @@ europc_boot(const device_t *info)
     if (mouse_type == MOUSE_TYPE_INTERNAL) {
         sys->mouse = device_add(&mouse_logibus_onboard_device);
         mouse_bus_set_irq(sys->mouse, 2);
+        mouse_set_poll(mouse_bus_poll, sys->mouse);
         /* Configure the port for (Bus Mouse Compatible) Mouse. */
         b |= 0x01;
     } else if (joystick_type)

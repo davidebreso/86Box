@@ -57,6 +57,8 @@ extern int    tablet_tool_type;
 #ifdef EMU_DEVICE_H
 extern const device_t *mouse_get_device(int mouse);
 extern void           *mouse_ps2_init(const device_t *);
+extern int            mouse_ps2_poll(int x, int y, int z, int b, double abs_x, double abs_y, void *priv);
+extern int            mouse_bus_poll(int x, int y, int z, int b, double abs_x, double abs_y, void *priv);
 
 extern const device_t mouse_logibus_device;
 extern const device_t mouse_logibus_onboard_device;
@@ -68,6 +70,7 @@ extern const device_t mouse_mssystems_device;
 extern const device_t mouse_msserial_device;
 extern const device_t mouse_ltserial_device;
 extern const device_t mouse_ps2_device;
+extern const device_t mouse_ps2_onboard_device;
 extern const device_t mouse_wacom_device;
 extern const device_t mouse_wacom_artpad_device;
 #endif
@@ -78,7 +81,7 @@ extern void mouse_reset(void);
 extern void mouse_set_buttons(int buttons);
 extern void mouse_set_poll_ex(void (*poll_ex)(void));
 extern void mouse_process(void);
-extern void mouse_set_poll(int (*f)(int, int, int, int, void *), void *);
+extern void mouse_set_poll(int (*f)(int, int, int, int, double, double, void *), void *);
 extern void mouse_poll(void);
 
 extern void mouse_bus_set_irq(void *priv, int irq);

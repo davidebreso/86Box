@@ -48,6 +48,7 @@
 #include <86box/nvr.h>
 #include <86box/hdc.h>
 #include <86box/keyboard.h>
+#include <86box/mouse.h>
 #include <86box/chipset.h>
 #include <86box/sio.h>
 #include <86box/video.h>

@@ -23,6 +23,7 @@
 #include <86box/device.h>
 #include <86box/keyboard.h>
 #include <86box/mouse.h>
+#include <86box/sio.h>
 #include <86box/plat_unused.h>
 
 enum {
@@ -165,9 +166,10 @@ ps2_write(void *priv)
     if (dev->flags & FLAG_CTRLDAT) {
         dev->flags &= ~FLAG_CTRLDAT;
 
-        if (val == 0xff)
+        if (val == 0xff) {
             kbc_at_dev_reset(dev, 1);
-        else  switch (dev->command) {
+            mouse_ps2_log("%s: reset\n", dev->name);
+        } else  switch (dev->command) {
             case 0xe8: /* set mouse resolution */
                 dev->resolution = val;
                 kbc_at_dev_queue_add(dev, 0xfa, 0);
@@ -310,8 +312,8 @@ ps2_write(void *priv)
     }
 }
 
-static int
-ps2_poll(int x, int y, int z, int b, UNUSED(double abs_x), UNUSED(double abs_y), void *priv)
+int
+mouse_ps2_poll(int x, int y, int z, int b, UNUSED(double abs_x), UNUSED(double abs_y), void *priv)
 {
     atkbc_dev_t *dev = (atkbc_dev_t *) priv;
     int packet_size = (dev->flags & FLAG_INTMODE) ? 4 : 3;
@@ -345,14 +347,21 @@ ps2_poll(int x, int y, int z, int b, UNUSED(double abs_x), UNUSED(double abs_y),
 void *
 mouse_ps2_init(const device_t *info)
 {
-    atkbc_dev_t *dev = kbc_at_dev_init(DEV_AUX);
+    atkbc_dev_t *dev; 
     int      i;
 
+    if (info->local & MOUSE_TYPE_ONBOARD) {
+        dev = (atkbc_dev_t *)f82c710_ps2_dev_init();
+        i = 2;
+    } else {
+        dev = kbc_at_dev_init(DEV_AUX);
+        i = device_get_config_int("buttons");    
+    }
     dev->name = info->name;
     dev->type = info->local;
 
     dev->mode = MODE_STREAM;
-    i         = device_get_config_int("buttons");
+
     if (i > 2)
         dev->flags |= FLAG_INTELLI;
     if (i > 4)
@@ -367,7 +376,10 @@ mouse_ps2_init(const device_t *info)
     mouse_set_buttons(i);
 
     dev->process_cmd = ps2_write;
-    dev->execute_bat = ps2_bat;
+    if(dev->type & MOUSE_TYPE_ONBOARD)
+        dev->execute_bat = ps2_bat;
+    else
+        dev->execute_bat = ps2_bat;
 
     dev->scan        = &mouse_scan;
 
@@ -420,8 +432,22 @@ const device_t mouse_ps2_device = {
     .init          = mouse_ps2_init,
     .close         = ps2_close,
     .reset         = NULL,
-    { .poll = ps2_poll },
+    { .poll = mouse_ps2_poll },
     .speed_changed = NULL,
     .force_redraw  = NULL,
     .config        = ps2_config
+};
+
+const device_t mouse_ps2_onboard_device = {
+    .name          = "Standard PS/2 Mouse (On-Board)",
+    .internal_name = "ps2_onboard",
+    .flags         = DEVICE_PS2,
+    .local         = MOUSE_TYPE_PS2 | MOUSE_TYPE_ONBOARD,
+    .init          = mouse_ps2_init,
+    .close         = ps2_close,
+    .reset         = NULL,
+    { .poll = mouse_ps2_poll },
+    .speed_changed = NULL,
+    .force_redraw  = NULL,
+    .config        = NULL
 };

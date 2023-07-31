@@ -475,8 +475,8 @@ ms_write(uint16_t port, uint8_t val, void *priv)
 }
 
 /* The emulator calls us with an update on the host mouse device. */
-static int
-bm_poll(int x, int y, UNUSED(int z), int b, UNUSED(double abs_x), UNUSED(double abs_y), void *priv)
+int
+mouse_bus_poll(int x, int y, UNUSED(int z), int b, UNUSED(double abs_x), UNUSED(double abs_y), void *priv)
 {
     mouse_t *dev = (mouse_t *) priv;
     int xor ;
@@ -839,7 +839,7 @@ const device_t mouse_logibus_device = {
     .init          = bm_init,
     .close         = bm_close,
     .reset         = NULL,
-    { .poll = bm_poll },
+    { .poll = mouse_bus_poll },
     .speed_changed = NULL,
     .force_redraw  = NULL,
     .config        = lt_config
@@ -853,7 +853,7 @@ const device_t mouse_logibus_onboard_device = {
     .init          = bm_init,
     .close         = bm_close,
     .reset         = NULL,
-    { .poll = bm_poll },
+    { .poll = mouse_bus_poll },
     .speed_changed = NULL,
     .force_redraw  = NULL,
     .config        = NULL
@@ -867,7 +867,7 @@ const device_t mouse_msinport_device = {
     .init          = bm_init,
     .close         = bm_close,
     .reset         = NULL,
-    { .poll = bm_poll },
+    { .poll = mouse_bus_poll },
     .speed_changed = NULL,
     .force_redraw  = NULL,
     .config        = ms_config
