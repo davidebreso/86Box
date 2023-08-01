@@ -50,7 +50,10 @@
  *
  *          Based on my earlier HD20 driver for the EuroPC.
  *
+ *          Davide Bresolin <https://github.com/davidebreso>
+ *
  *          Copyright 2017-2018 Fred N. van Kempen.
+ *          Copyright 2023 Davide Bresolin.
  *
  *          Redistribution and  use  in source  and binary forms, with
  *          or  without modification, are permitted  provided that the
@@ -236,10 +239,11 @@ typedef struct drive_t {
 typedef struct hdc_t {
     const char *name; /* controller name */
 
-    uint16_t base; /* controller base I/O address */
-    int8_t   irq;  /* controller IRQ channel */
-    int8_t   dma;  /* controller DMA channel */
-    int8_t   type; /* controller type ID */
+    uint16_t base;      /* controller base I/O address */
+    int8_t   irq;       /* controller IRQ channel */
+    int8_t   dma;       /* controller DMA channel */
+    int8_t   type;      /* controller type ID */
+    int8_t   switches;  /* controller switches, needed by Seagate BIOS to set HD type */
 
     uint32_t rom_addr; /* address where ROM is */
     rom_t    bios_rom; /* descriptor for the BIOS */
@@ -270,6 +274,8 @@ typedef struct hdc_t {
     uint8_t data[512];       /* data buffer */
     uint8_t sector_buf[512]; /* sector buffer */
 } hdc_t;
+
+#define ENABLE_XTA_LOG 1
 
 #ifdef ENABLE_XTA_LOG
 int xta_do_log = ENABLE_XTA_LOG;
@@ -933,11 +939,7 @@ hdc_read(uint16_t port, void *priv)
             break;
 
         case 2:         /* "read option jumpers" */
-            if (dev->type == 2) {
-                ret = 0x00;  /* needed to set 40MB HD type in the Amstrad PC5086 */
-            } else {
-                ret = 0xff; /* all switches off */
-            }
+            ret = dev->switches;
             break;
 
         default:
@@ -1034,6 +1036,7 @@ xta_init(const device_t *info)
             dev->irq      = device_get_config_int("irq");
             dev->rom_addr = device_get_config_hex20("bios_addr");
             dev->dma      = 3;
+            dev->switches = 0xff;
             bios_rev      = (char *) device_get_config_bios("bios_rev");
             fn            = (char *) device_get_bios_file(info, (const char *) bios_rev, 0);
             max           = 1;
@@ -1044,6 +1047,7 @@ xta_init(const device_t *info)
             dev->base = 0x0320;
             dev->irq  = 5;
             dev->dma  = 3;
+            dev->switches = 0xff;
             break;
             
         case 2: /* Amstrad PC5086 */
@@ -1051,6 +1055,7 @@ xta_init(const device_t *info)
             dev->base     = 0x0320;
             dev->irq      = 5;
             dev->dma      = 3;
+            dev->switches = 0;      /* PC5086 40Mb Internal HDD is type 0 */
             dev->rom_addr = 0xC8000;
             fn            = PC5086_BIOS_FILE;
             max           = 1;
