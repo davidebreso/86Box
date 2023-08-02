@@ -268,6 +268,36 @@ ct451_in(uint16_t addr, void *p)
         return temp;
 }
 
+static float
+ct451_getclock(int clock)
+{
+    float ret = 0.0;
+
+    switch (clock) {
+        case 0:
+        default:
+            ret = 25175000.0;
+            break;
+        case 1:
+            ret = 28322000.0;
+            break;
+        case 2:
+            ret = 40000000.0;
+            break;
+    }
+
+    return ret;
+}
+
+static void
+ct451_recalctimings(svga_t *svga)
+{
+    ct451_t *ct451     = (ct451_t *) svga->priv;
+    int    clk_sel = (svga->miscout >> 2) & 3;
+
+    svga->clock = (cpuclock * (double) (1ULL << 32)) / ct451_getclock(clk_sel);
+}
+
 
 static void *
 ct451_init(const device_t *info)
@@ -291,7 +321,7 @@ ct451_init(const device_t *info)
 
     ct451_log("CT451: calling SVGA init\n");
     svga_init(info, &ct451->svga, ct451, 256 << 10,
-               NULL,
+               ct451_recalctimings,
                ct451_in, ct451_out,
                NULL,
                NULL);
