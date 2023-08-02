@@ -73,7 +73,7 @@ static atkbc_dev_t *SavedKbd                        = NULL;
 
 static uint8_t     inv_cmd_response                 = 0xfa;
 
-static const scancode scancode_set1[512] = {
+const scancode scancode_set1[512] = {
   // clang-format off
     { {          0},{               0} }, { {     0x01,0},{          0x81,0} }, { {     0x02,0},{          0x82,0} }, { {     0x03,0},{          0x83,0} },        /*000*/
     { {     0x04,0},{          0x84,0} }, { {     0x05,0},{          0x85,0} }, { {     0x06,0},{          0x86,0} }, { {     0x07,0},{          0x87,0} },        /*004*/

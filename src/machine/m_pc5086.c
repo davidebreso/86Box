@@ -72,7 +72,7 @@ machine_pc5086_init(const machine_t *model)
     device_add(&ct_82c100_device);
     device_add(&pc5086_sio_device);
 
-    device_add(&keyboard_xt_device);
+    device_add(&keyboard_extclone_device);
 
     /*
      * Set up and enable the XTA disk controller.

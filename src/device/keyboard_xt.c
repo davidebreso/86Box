@@ -68,6 +68,8 @@
 #define KBD_TYPE_PRAVETZ  10
 #define KBD_TYPE_XTCLONE  11
 
+#define KBD_TYPE_ENHANCED 0x80 /* Keyboard is enhanced version of one of the above. */
+
 typedef struct xtkbd_t {
     int want_irq;
     int blocked;
@@ -80,6 +82,7 @@ typedef struct xtkbd_t {
     uint8_t key_waiting;
     uint8_t type;
     uint8_t pravetz_flags;
+    uint8_t is_enhanced;
 
     pc_timer_t send_delay_timer;
 } xtkbd_t;
@@ -739,7 +742,13 @@ kbd_init(const device_t *info)
                   kbd_read, NULL, NULL, kbd_write, NULL, NULL, kbd);
     keyboard_send = kbd_adddata_ex;
     kbd_reset(kbd);
-    kbd->type = info->local;
+    /* Remove KBD_TYPE_ENHANCED from keyboard type */
+    kbd->type = info->local & ~KBD_TYPE_ENHANCED;
+    /* set is_enhanced flag if keyboard is enhanced type */
+    kbd->is_enhanced = (info->local & KBD_TYPE_ENHANCED) >> 7;
+    kbd_log("XTkbd: %s keyboard type %02X\n",
+            (kbd->is_enhanced ? "enhanced" : "standard") , kbd->type);
+
     if (kbd->type == KBD_TYPE_PRAVETZ) {
         io_sethandler(0x00c0, 16,
                       kbd_read, NULL, NULL, kbd_write, NULL, NULL, kbd);
@@ -883,7 +892,13 @@ kbd_init(const device_t *info)
 
     timer_add(&kbd->send_delay_timer, kbd_poll, kbd, 1);
 
-    keyboard_set_table(scancode_xt);
+    if(kbd->is_enhanced) {
+        /* Use AT scancodes set 1 for enhanced 101/102 keys keyboards */
+        keyboard_set_table(scancode_set1);
+    } else {
+        /* Use XT scancodes for standard 83 keys keyboards */
+        keyboard_set_table(scancode_xt);
+    }
 
     is_tandy = (kbd->type == KBD_TYPE_TANDY);
     is_t1x00 = (kbd->type == KBD_TYPE_TOSHIBA);
@@ -1081,3 +1096,18 @@ const device_t keyboard_xtclone_device = {
     .force_redraw  = NULL,
     .config        = NULL
 };
+
+const device_t keyboard_extclone_device = {
+    .name          = "Enhanced XT (Clone) Keyboard",
+    .internal_name = "keyboard_extclone",
+    .flags         = 0,
+    .local         = KBD_TYPE_XTCLONE | KBD_TYPE_ENHANCED,
+    .init          = kbd_init,
+    .close         = kbd_close,
+    .reset         = kbd_reset,
+    { .available = NULL },
+    .speed_changed = NULL,
+    .force_redraw  = NULL,
+    .config        = NULL
+};
+

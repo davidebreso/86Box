@@ -200,6 +200,7 @@ extern void (*keyboard_send)(uint16_t val);
 extern void kbd_adddata_process(uint16_t val, void (*adddata)(uint16_t val));
 
 extern const scancode scancode_xt[512];
+extern const scancode scancode_set1[512];
 
 extern uint8_t keyboard_set3_flags[512];
 extern uint8_t keyboard_set3_all_repeat;
@@ -227,6 +228,7 @@ extern const device_t keyboard_xt_lxt3_device;
 extern const device_t keyboard_xt_olivetti_device;
 extern const device_t keyboard_xt_zenith_device;
 extern const device_t keyboard_xtclone_device;
+extern const device_t keyboard_extclone_device;
 extern const device_t keyboard_at_device;
 extern const device_t keyboard_at_siemens_device;
 extern const device_t keyboard_at_ami_device;
