@@ -54,6 +54,8 @@ typedef struct ct451_t
     uint8_t xreg[128];  /* Extension registers */
     uint8_t setup;      /* Setup control register */
     
+    /* Pixel clocks */
+    double clock[3];
 } ct451_t;
 
 #ifdef ENABLE_CT451_LOG
@@ -102,22 +104,19 @@ ct451_out(uint16_t addr, uint8_t val, void *priv)
         {
                 if(ct451->xena & 0x40)
                 {
-                        ct451_log("%04X->", addr);
                         addr ^= 0x60;        
-                        ct451_log("%04X ", addr);
                 }
         }
         /* mono / color addr selection */
         else if (((addr&0xFFF0) == 0x3D0 || (addr&0xFFF0) == 0x3B0) && !(svga->miscout & 1))
         {
-                ct451_log("%04X->", addr);
                 addr ^= 0x60;        
-                ct451_log("%04X ", addr);        
         }
 
-        ct451_log("ct451_out : %04X %02X  %02X %i ", addr, val, ram[0x489], ins);
+/*
+        ct451_log("ct451_out : %04X %02X  %02X ", addr, val, ram[0x489]);
         ct451_log("  %04X:%04X\n", CS,cpu_state.pc); 
-        
+*/        
         switch(addr)
         {
                 case 0x102:     /* Video subsystem sleep control */
@@ -201,17 +200,13 @@ ct451_in(uint16_t addr, void *p)
         {
                 if(ct451->xena & 0x40)
                 {
-                        ct451_log("%04X->", addr);
                         addr ^= 0x60;        
-                        ct451_log("%04X ", addr);
                 }
         }
         /* mono / color addr selection */
         else if (((addr&0xFFF0) == 0x3D0 || (addr&0xFFF0) == 0x3B0) && !(svga->miscout & 1))
         {
-                ct451_log("%04X->", addr);
                 addr ^= 0x60;        
-                ct451_log("%04X ", addr);        
         }
         
         switch(addr)
@@ -261,32 +256,11 @@ ct451_in(uint16_t addr, void *p)
                 default:
                 temp = svga_in(addr, svga);
         }
-        
-        ct451_log("ct451_in : %04X %02X  %02X %i ", addr, temp, ram[0x489], ins);
+/*        
+        ct451_log("ct451_in : %04X %02X  %02X ", addr, temp, ram[0x489]);
         ct451_log("  %04X:%04X\n", CS,cpu_state.pc);        
-
+*/
         return temp;
-}
-
-static float
-ct451_getclock(int clock)
-{
-    float ret = 0.0;
-
-    switch (clock) {
-        case 0:
-        default:
-            ret = 25175000.0;
-            break;
-        case 1:
-            ret = 28322000.0;
-            break;
-        case 2:
-            ret = 40000000.0;
-            break;
-    }
-
-    return ret;
 }
 
 static void
@@ -295,7 +269,11 @@ ct451_recalctimings(svga_t *svga)
     ct451_t *ct451     = (ct451_t *) svga->priv;
     int    clk_sel = (svga->miscout >> 2) & 3;
 
-    svga->clock = (cpuclock * (double) (1ULL << 32)) / ct451_getclock(clk_sel);
+    /* Set CLK0 if selected clock is not valid */
+    if (clk_sel > 2)
+        clk_sel = 0;
+    ct451_log("CT451: Pixel clock %f MHz\n", ct451->clock[clk_sel]/1000000.0);
+    svga->clock = (cpuclock * (double) (1ULL << 32)) / ct451->clock[clk_sel];
 }
 
 
@@ -305,15 +283,23 @@ ct451_init(const device_t *info)
     ct451_t *ct451 = malloc(sizeof(ct451_t));
     char  *romfn = NULL;
     memset(ct451, 0, sizeof(ct451_t));
-    
+
+    /* Set standard VGA pixel clocks */
+    ct451->clock[0] = 25175000.0;
+    ct451->clock[1] = 28322000.0;
+
     switch (info->local) {
         case CT451:
             romfn = BIOS_CT451_PATH;
+            /* 40 MHz CLK2 for 132 columns and 800x600 mode */
+            ct451->clock[2] = 40000000.0;
             break;
         
         case CT451_PC5086:
             romfn = BIOS_CT451_PC5086_PATH;
-            break;
+             /* CLK2 is 32MHz on the PC5086? TODO: check the actual hardware */
+            ct451->clock[2] = 32000000.0;
+           break;
     }
     
     ct451_log("CT451: setting up BIOS from %s\n", romfn);
