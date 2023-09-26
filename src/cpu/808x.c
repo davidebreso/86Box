@@ -179,8 +179,32 @@ x808x_log(const char *fmt, ...)
         va_end(ap);
     }
 }
+
+static void
+x808x_log_start(const char *fmt, ...)
+{
+    va_list ap;
+
+    x808x_do_log = 1;
+    va_start(ap, fmt);
+    pclog_ex(fmt, ap);
+    va_end(ap);
+}
+
+static void
+x808x_log_stop(const char *fmt, ...)
+{
+    va_list ap;
+
+    x808x_do_log = 0;
+    va_start(ap, fmt);
+    pclog_ex(fmt, ap);
+    va_end(ap);
+}
 #else
 #    define x808x_log(fmt, ...)
+#    define x808x_log_start(fmt, ...)
+#    define x808x_log_stop(fmt, ...)
 #endif
 
 static void pfq_add(void);
@@ -358,11 +382,11 @@ run_bus_cycle(int io_type)
 {
     int do_bus_access = (io_type != 0) && (!(io_type & BUS_CODE) || schedule_fetch);
 
-    x808x_log("[%04X:%04X] %02X bus access %02X (%i)\n", CS, cpu_state.pc, opcode, io_type, do_bus_access);
+    // x808x_log("[%04X:%04X] %02X bus access %02X (%i)\n", CS, cpu_state.pc, opcode, io_type, do_bus_access);
 
     if (do_bus_access) {
         if (not_ready > 0) {
-            x808x_log("[%04X:%04X] %02X TW x%i\n", CS, cpu_state.pc, opcode, not_ready);
+            // x808x_log("[%04X:%04X] %02X TW x%i\n", CS, cpu_state.pc, opcode, not_ready);
             cycles_forward(not_ready);
             not_ready = 0;
         }
@@ -426,7 +450,7 @@ cycles_idle(int c)
     int d;
 
     for (d = 0; d < c; d++) {
-        x808x_log("[%04X:%04X] %02X TI\n", CS, cpu_state.pc, opcode);
+        // x808x_log("[%04X:%04X] %02X TI\n", CS, cpu_state.pc, opcode);
 
         cycles_forward(1);
         run_dma_cycle(1);
@@ -439,7 +463,7 @@ cycles_biu(int bus, int init)
     /* T1, T2 = Nothing, T3 = Start and schedule, T4 = Nothing */
     pasv = (bus || ((BUS_CYCLE == BUS_T1) && schedule_fetch)) ? 0 : 1;
 
-    x808x_log("cycles_biu(%i, %i): %i, %i, %i, %i\n", bus, init, prefetching, pfq_pos, pfq_size, BUS_CYCLE);
+    // x808x_log("cycles_biu(%i, %i): %i, %i, %i, %i\n", bus, init, prefetching, pfq_pos, pfq_size, BUS_CYCLE);
     if (bus) {
         /* CPU wants non-code bus access. */
         if (init) {
@@ -505,12 +529,12 @@ wait(int c, int bus)
     if (c < 0)
         pclog("Negative cycles: %i!\n", c);
 
-    x808x_log("[%04X:%04X] %02X %i cycles (%i)\n", CS, cpu_state.pc, opcode, c, bus);
+    // x808x_log("[%04X:%04X] %02X %i cycles (%i)\n", CS, cpu_state.pc, opcode, c, bus);
 
     for (d = 0; d < c; d++) {
-        x808x_log("[%04X:%04X] %02X cycle %i BIU\n", CS, cpu_state.pc, opcode, d);
+        // x808x_log("[%04X:%04X] %02X cycle %i BIU\n", CS, cpu_state.pc, opcode, d);
         cycles_biu(bus, !d);
-        x808x_log("[%04X:%04X] %02X cycle %i EU\n", CS, cpu_state.pc, opcode, d);
+        // x808x_log("[%04X:%04X] %02X cycle %i EU\n", CS, cpu_state.pc, opcode, d);
         cycles_forward(1);
     }
 }
@@ -811,6 +835,7 @@ pfq_read(void)
     if (pfq_pos < 0)
         pfq_pos = 0;
     cpu_state.pc = (cpu_state.pc + 1) & 0xffff;
+    x808x_log("%02X ", temp);
     return temp;
 }
 
@@ -2156,12 +2181,14 @@ execx86(int cycs)
 
                 case 0xc0:
                 case 0xc1: /*rot imm8 */
+                    x808x_log_start("[%04X:%04X] i186 instruction: %02X ", CS, cpu_state.pc, opcode);
                     bits = 8 << (opcode & 1);
                     do_mod_rm();
                     if (cpu_mod == 3)
                         wait(1, 0);
                     cpu_data = get_ea();
                     cpu_src  = pfq_fetchb();
+                    x808x_log_stop("\n");
 
                     wait((cpu_mod != 3) ? 9 : 6, 0);
 
